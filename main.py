@@ -117,8 +117,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
 
 def IP_Address(addr):
-    ui.textEdit.append('Scanning IP Addresses....')
-    ui.textEdit.repaint() # for update the textEdit immediately not wait to all function to finish
     result = -1
     for x in [80, 135]:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -133,6 +131,8 @@ def check1():
     start_time = time.monotonic()
     user_IP = ui.lineEdit.text()
     x = str(user_IP.split(".")[0]) + "." + str(user_IP.split(".")[1]) + "." + str(user_IP.split(".")[2]) + "."
+    ui.textEdit.append('Scanning IP Addresses....')
+    ui.textEdit.repaint() # for update the textEdit immediately not wait to all function to finish
     for ip in range(1, 255):
         addr = str(x) + str(ip)
         if IP_Address(addr):
