@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-import socket
-import sys
+import scapy.all as scapy
 import time
+import sys
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -117,15 +117,16 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
 
 def IP_Address(addr):
-    ui.textEdit.append('Scanning IP Addresses....')
+    ui.textEdit.append('Scanning IP addresses....')
     ui.textEdit.repaint() # for update the textEdit immediately not wait to all function to finish
-    result = -1
-    for x in [80, 135]:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.01)
-        result = s.connect_ex((addr, x))
-        s.close()
-    return result == 0
+
+    # Try ARPing the ip address range supplied by the user.
+    # The arping() method in scapy creates a pakcet with an ARP message
+    # and sends it to the broadcast mac address ff:ff:ff:ff:ff:ff.
+    # If a valid ip address range was supplied the program will return
+    # the list of all results.
+    ans, unans = scapy.arping(addr)
+    return ans
 
 
 def check1():
@@ -133,11 +134,12 @@ def check1():
     start_time = time.monotonic()
     user_IP = ui.lineEdit.text()
     x = str(user_IP.split(".")[0]) + "." + str(user_IP.split(".")[1]) + "." + str(user_IP.split(".")[2]) + "."
-    for ip in range(1, 255):
-        addr = str(x) + str(ip)
-        if IP_Address(addr):
-            printing = ("%s - %s" % (addr, socket.getfqdn(addr)))
-            ui.textEdit.append(printing)
+    x = x + '0/24'
+    ans = IP_Address(x)
+    ui.textEdit.clear()
+    for result in ans.res:
+        printing = ("%s - %s" % (result[0].payload.pdst, result[1].payload.hwsrc))
+        ui.textEdit.append(printing)
     ui.textEdit.append('--------------------------------------------------------')
     ui.textEdit.append("Time used: %s seconds" % (time.monotonic() - start_time))
 
@@ -146,16 +148,17 @@ def Port(host_IP, frst, last):
     ui.textEdit_3.repaint() # for update the textEdit immediately not wait to all function to finish
     ui.textEdit_3.clear()
     start_time = time.monotonic()
-    for ports in range(frst, last):
-        sk = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sk.settimeout(0.6)
-        result = sk.connect_ex((host_IP, ports))
-        if (result == 0):
-            port_s = (' Port %d   ->     OPEN' % (ports))
-            ui.textEdit_3.append(port_s)
-    sk.close()
+    for dport in range(frst, last):
+        pkt = scapy.IP(dst=host_IP) / scapy.TCP(dport=dport)
+        ans, unans = scapy.sr(pkt, timeout=1)
+        if ans:
+            for send, rcv in ans:
+                if rcv[scapy.TCP].flags == "SA":
+                    port_s = (' Port %d   ->     OPEN' % (dport))
+                    ui.textEdit_3.append(port_s)
     ui.textEdit_3.append('--------------------------------------------------------')
     ui.textEdit_3.append("Time used: %s seconds" % (time.monotonic() - start_time))
+
 
 def check2():
     ui.textEdit_3.clear()
@@ -164,7 +167,7 @@ def check2():
         user_IP.split(".")[3])
     frst_port = int(ui.lineEdit_5.text())
     last_port = int(ui.lineEdit_6.text())
-    ui.textEdit_3.append('Scanning Open Ports....')
+    ui.textEdit_3.append('Scanning Open Ports.....')
     Port(x, frst_port, last_port)
 
 
