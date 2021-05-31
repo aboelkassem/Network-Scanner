@@ -2,10 +2,12 @@
 
 > A small project that I wrote on the fly for (IT351) Computer Networks University Course to identify and label the devices in my networks and open ports.
 
+
 # Technical Points
-- Built using `python` and `socket` library for TCP Scanning
+- Built using `python3` and for 
+  - `main.py` file that used `socket` library for TCP Scanning which used three-way handshake (ACK-SYN)
+  - `main-scapy.main` file that used `scapy` library for ARP Scanning which sends broadcast ARP message
 - Built GUI with `PyQt5` library
-- There are another version which using `scapy` library for ARP Scanning in `main-scapy.py` file
 
 ## How to use
 

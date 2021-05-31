@@ -117,12 +117,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
 
 def IP_Address(addr):
-    result = -1
-    for x in [80, 135]:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.01)
-        result = s.connect_ex((addr, x))
-        s.close()
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(0.01)
+    result = s.connect_ex((addr, 135))
+    s.close()
     return result == 0
 
 
